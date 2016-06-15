@@ -130,7 +130,4 @@
   <data name="whitestone" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\whitestone.gif;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="_null" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\null.gif;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
 </root>
