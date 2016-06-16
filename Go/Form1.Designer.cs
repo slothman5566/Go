@@ -46,7 +46,6 @@
             this.ClientSize = new System.Drawing.Size(620, 603);
             this.Controls.Add(this.groupBox1);
             this.Name = "Form1";
-            this.Text = "五子棋";
             this.ResumeLayout(false);
 
         }
