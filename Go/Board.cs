@@ -6,102 +6,8 @@ using System.Windows.Forms;
 
 namespace Go
 {
-    public class Node
-    {
-        public int [,] field ;
-        public int ID;
-        public Point chessPos;
-        public List<Node> list = new List<Node>();
-        public Node Top, Choose;
-        public int size;
-        private readonly int  [] z9 = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-        private readonly int [] i9 = { -4, -3, -2, -1, 0, 1, 2, 3, 4 };
-        private readonly int [] d9 = { 4, 3, 2, 1, 0, -1, -2, -3, -4 };
-        private int [] i2 = new int [5];
-        private int [] d2 = new int [5];
-        public Node()
-        {
-            Array.Copy(i9, 2, i2, 0, 5);
-            Array.Copy(d9, 2, d2, 0, 5);
-        }
 
-        public Node(int size)
-        {
-            field = new int [size, size];
-            this.size = size;
-            Array.Copy(i9, 2, i2, 0, 5);
-            Array.Copy(d9, 2, d2, 0, 5);
-        }
-
-        public bool patternCheck (int turn, int r, int c, int [] dr, int [] dc)
-        {
-            for (var i = 0; i < dr.Length; i++)
-            {
-                var tr = (r + dr [i]);
-                var tc = (c + dc [i]);
-                if (tr < 0 || tr > 15 || tc < 0 || tc > 15)
-                {
-                    return false;
-                }
-                var v = field [tr, tc];
-                if (v != turn)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-        //http://programmermagazine.github.io/201407/htm/focus2.html reference
-        private int [] attackScores = { 0, 3, 10, 30, 100, 500 };
-        private int [] guardScores = { 0, 2, 9, 25, 90, 400 };
-        private int getScore (int r, int c, int turn, int mode)
-        {
-            var score = 0;
-            var mScores = (mode == 0) ? attackScores : guardScores;
-            field [r, c] = turn;
-            for (var start = 0; start <= 4; start++)
-            {
-                for (var len = 5; len >= 1; len--)
-                {
-                    var zero = new int [10];
-                    Array.Copy(z9, start, zero, 0, start + len);
-                    var dec = new int [10];
-                    Array.Copy(d9, start, dec, 0, start + len);
-                    var inc = new int [10];
-                    Array.Copy(i9, start, inc, 0, start + len);
-
-                    if (patternCheck( turn, r, c, zero, inc))
-                    {
-                        score += mScores [len];
-                    }
-                    if (patternCheck( turn, r, c, inc, zero))
-                    {
-                        score += mScores [len];
-                    }
-                    if (patternCheck(turn, r, c, inc, inc))
-                    {
-                        score += mScores [len];
-                    }
-                    if (patternCheck( turn, r, c, inc, dec))
-                    {
-                        score += mScores [len];
-                    }
-                }
-            }
-            return score;
-        }
-
-        public int sbe()
-        {
-            return 0;
-        }
-
-        public void DoAction()
-        {
-            field [chessPos.X, chessPos.Y] = ID;
-        }
-    }
-
+    //http://programmermagazine.github.io/201407/htm/focus2.html cal score reference
     public partial class Board : UserControl
     {
         protected int boardSize;
@@ -110,9 +16,21 @@ namespace Go
         private const int boardLeftTopY = 30;
         private int [,] chessField;
         private PictureBox [,] chessBoxes;
-
+        private  List<int> z9 = new List<int>();//{ 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        private  List<int> i9 = new List<int>();//{ -4, -3, -2, -1, 0, 1, 2, 3, 4 };
+        private  List<int> d9 = new List<int>();//{ 4, 3, 2, 1, 0, -1, -2, -3, -4 };
+        private  List<int> z5 = new List<int>();//{ 0, 0, 0, 0, 0 };
+        private List<int> i2 = new List<int>();
+        private List<int> d2 = new List<int>();
+        private int[] attackScores = { 0, 3, 10, 30, 100, 500 };
+        private int[] guardScores = { 0, 2, 9, 25, 90, 400 };
         private Size realSize;
-        public Size BoardRealSize
+        public bool AI=false;
+        public  struct Best
+        {
+            public int x,y,max;            
+        }
+    public Size BoardRealSize
         {
             get
             {
@@ -132,60 +50,22 @@ namespace Go
                 isTurnToBlack = value;
             }
         }
-
-
-        public delegate void ChessMovesEvent(int row, int col);
-        public ChessMovesEvent ChessMovingDel { set; get; }
-
-        private void Search(Node node)
+        public Board()
         {
-            for (var x = 0; x != boardSize; x++)
-            {
-                for (var y = 0; y != boardSize; y++)
-                {
-                    if (node.field [x, y] == 0)
-                    {
-                        var tmp = new Node(boardSize);
-                        if (node.ID == 1)
-                        {
-                            tmp.ID = 2;
-                            Array.Copy(node.field, tmp.field, boardSize);
-
-                            tmp.chessPos = new Point(x, y);
-                            tmp.DoAction();
-                            node.list.Add(tmp);
-                            tmp.Top = node;
-                            if (tmp.sbe() == 0)
-                            {
-                                Search(tmp);
-                            }
-                        }
-                        else
-                        {
-                            tmp.ID = 1;
-                            Array.Copy(node.field, tmp.field, boardSize);
-
-                            tmp.chessPos = new Point(x, y);
-                            tmp.DoAction();
-                            node.list.Add(tmp);
-                            tmp.Top = node;
-                            if (tmp.sbe() == 0)
-                            {
-                                Search(tmp);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
+          
+        } 
         public Board(int boardSize)
         {
             InitializeComponent();
-
+            z9.AddRange(new int [] { 0, 0, 0, 0, 0, 0, 0, 0, 0 });
+            i9.AddRange(new int [] { -4, -3, -2, -1, 0, 1, 2, 3, 4 });
+            d9.AddRange(new int [] { 4, 3, 2, 1, 0, -1, -2, -3, -4 });
+            z5.AddRange(new int [] { 0, 0, 0, 0, 0 });
+            i2.AddRange(new int [] { -2, -1, 0, 1, 2 });
+            d2.AddRange(new int [] { 2, 1, 0, -1, -2 });
             this.boardSize = boardSize;
-            chessBoxes = new PictureBox [boardSize, boardSize];
-            chessField = new int [boardSize, boardSize];
+            chessBoxes = new PictureBox[boardSize, boardSize];
+            chessField = new int[boardSize, boardSize];
             InitBoard();
             MouseMove += Board_MouseMove;
             MouseLeave += Board_MouseLeave;
@@ -199,9 +79,75 @@ namespace Go
             isTurnToBlack = true;
         }
 
-        public Board()
+        public bool patternCheck(int turn, int r, int c, List<int> dr, List<int> dc)//判斷是否有連線
         {
+            for (var i = 0; i != dr.Count; i++)
+            {
+                var tr = (r + dr[i]);
+                var tc = (c + dc[i]);
+                if (tr < 0 || tr >= boardSize || tc < 0 || tc >= boardSize)
+                {
+                    return false;
+                }
+                var v = chessField[tr, tc];
+                if (v != turn)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
+    
+     
+        private int getScore(int r, int c, int turn, int mode)
+        {
+            var score = 0;
+            var mScores = (mode == 0) ? attackScores : guardScores;
+            chessField[r, c] = turn;
+            for (var start = 0; start <= 4; start++)
+            {
+                for (var len = 5; len >= 1; len--)
+                {
+                    List<int> zero = new List<int>();
+                    for (int i = start; i < start + len; i++)
+                    {
+                        zero.Add(z9[i]);
+                    }
+                    List<int> dec=new List<int>();
+                    for (int i = start; i < start + len; i++)
+                       {
+                        dec.Add(d9 [i]);
+                    }
+                    List<int> inc = new List<int>();
+                    for (int i = start; i < start + len; i++)
+                    {
+                        inc.Add(i9[i]);
+                    }
+                  
+                    if (patternCheck(turn, r, c, zero, inc))
+                    {
+                        score += mScores[len];
+                    }
+                    if (patternCheck(turn, r, c, inc, zero))
+                    {
+                        score += mScores[len];
+                    }
+                    if (patternCheck(turn, r, c, inc, inc))
+                    {
+                        score += mScores[len];
+                    }
+                    if (patternCheck(turn, r, c, inc, dec))
+                    {
+                        score += mScores[len];
+                    }
+                }
+            }
+            chessField[r, c] = 0;
+            return score;
+        }
+
+    
+
 
         private void InitBoard()
         {
@@ -384,7 +330,7 @@ namespace Go
             PaintPreviewBox(point.X, point.Y, color);
         }
 
-        private  void ReSet()
+        public  void ReSet()
         {
             for (var x = 0; x != boardSize; x++)
             {
@@ -395,91 +341,81 @@ namespace Go
                     chessField [x, y] = 0;
                 }
             }
+            isTurnToBlack = true;
         }
 
         private void Bangjudge()
         {
-            for (var x = 2; x != boardSize - 2; x++)
+            for (var x = 0; x != boardSize - 2; x++)
             {
-                for (var y = 2; y != boardSize - 2; y++)
+                for (var y = 0; y != boardSize - 2; y++)
                 {
+                    bool win = false;
                     if (chessField [x, y] != 0)
                     {
-                        if (chessField [x, y - 1] == chessField [x, y] & chessField [x, y - 2] == chessField [x, y] & chessField [x, y + 1] == chessField [x, y] & chessField [x, y + 2] == chessField [x, y])
-                        {
-                            if (chessField [x, y] == 1)
+                        if (patternCheck(chessField [x, y], x, y, z5, i2)) // 垂直 | ;
+                            win = true;      
+                        
+                        if (patternCheck(chessField[x, y], x, y, i2, z5)) // 水平 - ;
+                            win = true;
+                        if (patternCheck(chessField[x, y], x, y, i2, i2)) // 下斜 \ ;
+                            win = true;
+                        if (patternCheck(chessField[x, y], x, y, i2, d2)) // 上斜 / ;
+                            win = true;
+                        if (win)
                             {
-                                MessageBox.Show
-                                ("Black is Good");
-                            }
-                            else
-                            {
-                                if (chessField [x, y] == 2)
+                                if (chessField[x, y] == 1)
                                 {
                                     MessageBox.Show
-                                    ("White is Good");
+                                    ("Black is Good");
                                 }
-                            }
-                            ReSet();
-                        }
-                        if (chessField [x - 1, y ] == chessField [x, y] & chessField [x - 2, y ] == chessField [x, y] & chessField [x + 1, y ] == chessField [x, y] & chessField [x + 2, y ] == chessField [x, y])
-                        {
-                            if (chessField [x, y] == 1)
+                                else
+                                {
+                                    if (chessField[x, y] == 2)
+                                    {
+                                        MessageBox.Show
+                                        ("White is Good");
+                                    }
+                                }
+                            if (AI && chessField [x, y] == 2)
                             {
                                 MessageBox.Show
-                                ("Black is Good");
+                                       ("輸給電腦丟臉!!");
+                                       
                             }
-                            else
-                            {
-                                if (chessField [x, y] == 2)
-                                {
-                                    MessageBox.Show
-                                    ("White is Good");
-                                }
+                            
+                                ReSet();
                             }
-                            ReSet();
-                        }
-                        if (chessField [x + 1, y - 1] == chessField [x, y] & chessField [x + 2, y - 2] == chessField [x, y] & chessField [x - 1, y + 1] == chessField [x, y] & chessField [x - 2, y + 2] == chessField [x, y])
-                        {
-                            if (chessField [x, y] == 1)
-                            {
-                                MessageBox.Show
-                                ("Black is Good");
-                            }
-                            else
-                            {
-                                if (chessField [x, y] == 2)
-                                {
-                                    MessageBox.Show
-                                    ("White is Good");
-                                }
-                            }
-                            ReSet();
-                        }
-                        if (chessField [x + 1, y + 1] == chessField [x, y] & chessField [x + 2, y + 2] == chessField [x, y] & chessField [x - 1, y - 1] == chessField [x, y] & chessField [x - 2, y - 2] == chessField [x, y])
-                        {
-                            if (chessField [x, y] == 1)
-                            {
-                                MessageBox.Show
-                                ("Black is Good");
-                            }
-                            else
-                            {
-                                if (chessField [x, y] == 2)
-                                {
-                                    MessageBox.Show
-                                    ("White is Good");
-                                }
-                            }
-                            ReSet();
-                        }
                     }
+                   
                 }
             }
         }
 
-
-
+     
+        private void ComputerTurn()
+        {
+            Best best = new Best();
+            best.x = best.y = 0;
+            best.max = -1;
+            for (int x = 0; x != boardSize; x++ )
+                for (int y = 0; y != boardSize; y++ )
+                {
+                    if (chessField [x, y] == 0)
+                    {
+                        int attackScore = getScore(x, y, 2, 0);
+                        int guardScore = getScore(x, y, 1, 1);
+                        int score = attackScore + guardScore;
+                        if (score > best.max)
+                        {
+                            best.x = x;
+                            best.y = y;
+                            best.max = score;
+                        }
+                    }
+                }
+            MoveChess(best.x, best.y);
+        }
         private void Board_MouseClick(object sender, MouseEventArgs e)
         {
             if (lastMovePoint.X >= boardSize || lastMovePoint.X < 0 || lastMovePoint.Y >= boardSize || lastMovePoint.X < 0)
@@ -492,11 +428,9 @@ namespace Go
                 return;
             }
             lastMovePoint = new Point(lastMovePoint.X, lastMovePoint.Y);
-            ChessMovingDel(lastMovePoint.X, lastMovePoint.Y);
-            var tmp = new Node(boardSize);
-            tmp.ID = 1;
-            Array.Copy(chessField, tmp.field, boardSize);
-            Search(tmp);
+            MoveChess(lastMovePoint.X, lastMovePoint.Y);
+            if(AI)
+            ComputerTurn();
             Bangjudge();
         }
 

@@ -28,16 +28,26 @@ namespace Go
             newBoard = new Board(15);
             newBoard.Location = new Point(0, 0);
             newBoard.Size = newBoard.BoardRealSize;
-            newBoard.ChessMovingDel = MoveChess;
             groupBox1.Controls.Add(newBoard);
             
         }
 
-        private void MoveChess(int row, int col)
+        private void 這樣就可以假裝你有朋友ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            newBoard.MoveChess(row, col);
+            newBoard.AI = true;
+            newBoard.ReSet();
         }
 
+        private void 幻想有朋友跟你玩ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            newBoard.AI = false;
+            newBoard.ReSet();
+        }
 
+        private void 重新開始ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.Close();
+            Environment.Exit(Environment.ExitCode);
+        }
     }
 }
